@@ -12,7 +12,7 @@
 # Get client certificate
 if [ ! -z "$acme_server" ] && [ ! -z "$acme_email" ]; then
   acme_get_certificate
-elif [ ! -z "$dropbear_get_cert" ]; then
+elif [ ! -z "$dropbear_auth_key" ]; then
   dropbear_get_certificate
 fi
 

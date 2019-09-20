@@ -2,7 +2,7 @@
 export acme_server=$(getarg acme_server=)
 export acme_email=$(getarg acme_email=)
 
-export dropbear_get_cert=$(getarg dropbear_get_cert=)
+export dropbear_auth_key=$(getarg dropbear_auth_key=)
 
 export buildah_registry=$(getarg buildah_registry=)
 export buildah_image=$(getarg buildah_image=)
