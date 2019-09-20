@@ -19,6 +19,7 @@ dropbear_get_certificate() {
   info "dropbear: Getting certificate for ${HOSTNAME} over SSH connection"
 
   info "dropbear: Starting Dropbear server"
+  mkdir -p /etc/dropbear
   dropbear -F -E -R
 
   info "dropbear: Waiting on /client.cert"
