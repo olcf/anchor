@@ -3,6 +3,7 @@
 # Install script for anchor dracut module
 #
 
+# List of binaries to install
 # Install lego to get self-signed certificate
 # Install dropbear to receive certificate
 # Install buildah to download and mount images
@@ -34,11 +35,13 @@ installkernel() {
 install() {
 
   # Install module library files to /lib
-  inst "$moddir/lib_acme.sh" /lib/lib_acme.sh
-  inst "$moddir/lib_squashfs.sh" /lib/lib_squashfs.sh
-  inst "$moddir/lib_buildah.sh" /lib/lib_buildah.sh
-  inst "$moddir/lib_overlayfs.sh" /lib/lib_overlayfs.sh
-  inst "$moddir/lib_dropbear.sh" /lib/lib_dropbear.sh
+  inst "$moddir/lib/lib_acme.sh" /lib/lib_acme.sh
+  inst "$moddir/lib/lib_squashfs.sh" /lib/lib_squashfs.sh
+  inst "$moddir/lib/lib_buildah.sh" /lib/lib_buildah.sh
+  inst "$moddir/lib/lib_overlayfs.sh" /lib/lib_overlayfs.sh
+  inst "$moddir/lib/lib_dropbear.sh" /lib/lib_dropbear.sh
+  inst "$moddir/anchor_auth.sh" /lib/anchor_auth.sh
+  inst "$moddir/anchor_image.sh" /lib/anchor_image.sh
 
   # Install unix tools for dracut module
   inst_multiple sed tr

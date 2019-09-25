@@ -17,18 +17,16 @@ image overlayed with a local ramdisk.
 Honestly, a lot. Two main repositories that the clusters team rely on are our
 Anchor Operations repository to handle automation steps to build and deploy
 images, and our Chart repository to handle needed services that communicate
-with Anchor.
+with Anchor. Management of these services and operations can be done in a
+thousand different ways.
 
 ## Repository Structure
 
-| -          | -                                                               |
+| ---        | ---                                                             |
 | Path       | Feature                                                         |
 | `src`      | Dracut module source directory                                  |
-| `src/auth` | Authentication plugins                                          |
-| `src/boot` | Boot plugins                                                    |
 | `doc`      | Documentation pages                                             |
 | `contrib`  | Auxiliary directory containing contributions that are not part  |
 |            | of anchor proper. This includes common CI configurations, build |
 |            | script examples, etc.                                           |
 | `build.sh` | Script to build RPM.                                            |
-| -          | -                                                               |

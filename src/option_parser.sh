@@ -1,3 +1,6 @@
+#!/bin/sh
+#
+# Parse kernel command line for variables needed to pass to library functions
 
 export acme_server=$(getarg acme_server=)
 export acme_email=$(getarg acme_email=)
