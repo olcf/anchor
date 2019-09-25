@@ -1,0 +1,77 @@
+include:
+  - build_input.yaml
+  - deploy_input.yaml
+  - base_image/build.yaml
+
+stages:
+  - build
+  - squash
+  - deploy
+
+.setup_build_env:
+  image: registry.example.com/example-namespace/anchor-build-tools:latest
+  before_script:
+    - oc login --token="$SERVICE_ACCOUNT_TOKEN" https://granite.ccs.ornl.gov:443
+    - export AUTH_FILE="/registry_auth.cfg"
+    - echo "$DOCKER_AUTH_CONFIG" > "$AUTH_FILE"
+      # Get variables from tag name
+      # [puppet role]/[image name]
+      # Ex tag names
+      # afdtn_client/initial_build
+      # stellar_compute/jvoss_tag_build
+      # stellar_compute/production
+      #
+    - export PUPPET_ROLE=$(echo "$CI_COMMIT_REF_NAME" | cut -d'/' -f 1)
+    - export IMAGE_SUFFIX=$(echo "$CI_COMMIT_REF_NAME" | cut -d'/' -f 2)
+    - export CLUSTER_NAME=$(echo "$PUPPET_ROLE" | cut -d'_' -f 1)
+    - export MESSAGE="${CI_COMMIT_MESSAGE}"
+    - export CI_SHORT_SHA="${CI_COMMIT_SHA:0:8}"
+      # Bug fix with tmpfs as /var
+    - mkdir -p /var/tmp
+  only:
+    # Only run on tags with a / separating two words
+    - /^\w+\/\w+$/
+  except:
+    - branches
+
+build image:
+  stage: build
+  extends: .setup_build_env
+  script:
+      # Build the image
+    - build_image/buildah_build.sh
+
+squash image:
+  stage: squash
+  extends: .setup_build_env
+  script:
+      # Squash the image
+    - build_image/buildah_squash.sh
+  when: manual
+
+deploy image:
+  stage: deploy
+  image: registry.example.com/example-namespace/anchor-build-tools:latest
+  only:
+    - stellar
+    - afdtn
+    - opendtn
+    - rhea
+    - cadence
+    - spoke
+  script:
+    - export AUTH_FILE="/registry_auth.cfg"
+    - echo "$DOCKER_AUTH_CONFIG" > "$AUTH_FILE"
+    - oc login --token="$SERVICE_ACCOUNT_TOKEN" "https://${DEPLOY_KUBE_CLUSTER}:443"
+      # Bug fix with tmpfs as /var
+    - mkdir -p /var/tmp
+      # Run deploy script
+    - deploy_image/deploy.sh
+
+helm check:
+  image: registry.example.com/example-namespace/anchor-build-tools:latest
+  stage: build
+  only:
+    - master
+  script:
+  - helm lint ./anchor-deploy
