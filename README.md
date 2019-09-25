@@ -22,8 +22,8 @@ thousand different ways.
 
 ## Repository Structure
 
-| ---------- | --------------------------------------------------------------- |
 | Path       | Feature                                                         |
+| ---------- | --------------------------------------------------------------- |
 | `src`      | Dracut module source directory                                  |
 | `doc`      | Documentation pages                                             |
 | `contrib`  | Auxiliary directory containing contributions that are not part  |
