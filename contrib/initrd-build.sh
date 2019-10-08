@@ -35,9 +35,9 @@ KERNEL=$(find "${KERNEL_PATH}" -name "${KERNEL_PATTERN}*" -printf '%f\n' | sort 
 if [ ! -z "${KERNEL_SPECIFIED_VALUE}" ]; then
   USER_KERNEL=${KERNEL_SPECIFIED_VALUE}
   if [ ! -a "/${KERNEL_PATH}/${KERNEL}" ]; then
-    echo -e "${RED}Kernel requested ${USER_KERNEL} doesn't exist in ${KERNEL_PATH}! Using ${KERNEL}.${RESTORE}"
+    echo -e "Kernel requested ${USER_KERNEL} doesn't exist in ${KERNEL_PATH}! Using ${KERNEL}."
   else
-    KERNEL=USER_KERNEL
+    KERNEL=$USER_KERNEL
   fi
 fi
 cp "/${KERNEL_PATH}/${KERNEL_PATTERN}${KERNEL}" /output
@@ -52,7 +52,7 @@ echo "hostonly=no" >> /etc/dracut.conf
 echo -e "Making initrd..."
 dracut -f -m 'kernel-modules anchor network base' --strip -v \
   --no-hostonly --force-drivers \
-  "overlay squashfs loop mlx4_core mlx4_en mlx4_ib igb bnx2 i40e ipmi_si ipmi_devintf ipmi_msghandler amd_microcode" \
+  "overlay squashfs loop mlx4_core mlx4_en mlx4_ib igb bnx2 i40e ipmi_si ipmi_devintf ipmi_msghandler" \
   "/output/initrd-${KERNEL}" "${KERNEL}"
 
 chmod 655 "/output/initrd-${KERNEL}"

@@ -4,8 +4,8 @@
 #
 # Read the following vars in from environment
 #
-# PUPPET_BRANCH, ADDITIONAL_PACKAGES, PXE_OPTIONS, IMAGE_SUFFIX, CLUSTER_NAME,
-# PUPPET_ROLE, MESSAGE, AUTH_FILE, BUILD_REGISTRY_URL, BASE_IMAGE
+# PUPPET_BRANCH, IMAGE_SUFFIX, CLUSTER_NAME, PUPPET_ROLE, MESSAGE, AUTH_FILE,
+# BUILD_REGISTRY_URL, BASE_IMAGE
 #
 # Outputs images in the following format
 # ${PUPPET_ROLE}:${IMAGE_SUFFIX}-${CI_SHORT_SHA}-${PUPPET_COMMIT_SHA}
@@ -41,7 +41,6 @@ buildah run "${container}" \
 
 # Set facts, run puppet, build dracut initrd
 buildah config --env PUPPET_BRANCH="${PUPPET_BRANCH}" "${container}" &&
-buildah config --env ADDITIONAL_PACKAGES="${ADDITIONAL_PACKAGES}" "${container}" &&
 buildah config --env IMAGE_SUFFIX="${IMAGE_SUFFIX}" "${container}" &&
 buildah config --env CLUSTER_NAME="${CLUSTER_NAME}" "${container}" &&
 buildah config --env PUPPET_ROLE="${PUPPET_ROLE}" "${container}" &&
@@ -61,7 +60,6 @@ PUPPET_COMMIT_SHA=$(grep -oP -m 1 \
 buildah config \
   --label build_reason="${MESSAGE}" \
   --label puppet_branch="${PUPPET_BRANCH}" \
-  --label mandated_kernel="${KERNEL_SPECIFIED_VALUE}" \
   --label mantainer="${GITLAB_USER_NAME}" \
   --label puppet_commit="${PUPPET_COMMIT_SHA}" \
   "${container}" &&
@@ -72,11 +70,9 @@ container_mount=$(buildah mount "${container}") &&
 cat <<-EOF > "${container_mount}/${PUPPET_ROLE}:${IMAGE_SUFFIX}-${CI_SHORT_SHA}-${PUPPET_COMMIT_SHA:-000000}" &&
 BUILD_REASON="${MESSAGE}"
 PUPPET_BRANCH="${PUPPET_BRANCH}"
-MANDATED_KERNEL="${KERNEL_SPECIFIED_VALUE}"
 MANTAINER="${GITLAB_USER_NAME}"
 PUPPET_COMMIT="${PUPPET_COMMIT_SHA}"
 PUPPET_BRANCH="${PUPPET_BRANCH}"
-ADDITIONAL_PACKAGES="${ADDITIONAL_PACKAGES}"
 IMAGE_SUFFIX="${IMAGE_SUFFIX}"
 CLUSTER_NAME="${CLUSTER_NAME}"
 PUPPET_ROLE="${PUPPET_ROLE}"

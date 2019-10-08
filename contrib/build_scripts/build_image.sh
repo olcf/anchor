@@ -17,11 +17,6 @@ if [ -z "$PUPPET_BRANCH" ]; then
   exit 1
 fi
 
-if [ -z "$ADDITIONAL_PACKAGES" ]; then
-  echo "$FAILED ADDITIONAL_PACKAGES not set! Exiting"
-  exit 1
-fi
-
 # From branch name
 if [ -z "$IMAGE_SUFFIX" ]; then
   echo "$FAILED IMAGE_SUFFIX not set! Exiting"
@@ -48,12 +43,6 @@ fi
 ## SCRIPT VARIABLES
 
 KEY_NAME=${CLUSTER_NAME}_shared
-
-# Where to look for kernel, by default in the image
-KERNEL_PATH=/boot/
-KERNEL_PATTERN='vmlinuz-'
-
-PUPPET_LOG="first-puppet-run.log"
 
 ################################################################################
 
@@ -131,23 +120,8 @@ function chroot_puppet() {
   echo "Starting first puppet run..."
   /opt/puppetlabs/bin/puppet agent --test --environment="${PUPPET_BRANCH}" --node_name_value="${PUPPET_ROLE}";
   echo "${OK} First puppet run complete"
-
-  echo -e "Clean yum cache"
-  yum clean all
-
-  # Assuming/hoping that repos were put in place after first run. Installing core
-  echo -e "Installing core from our repos"
-  # We want to split on words below
-  # shellcheck disable=SC2086
-  yum install -y @core ${ADDITIONAL_PACKAGES}
-
-  echo -e "Force reinstall kernel"
-  yum install -y kernel kernel-devel microcode_ctl linux-firmware
-  yum reinstall -y kernel kernel-devel microcode_ctl linux-firmware
-
   echo "Starting second puppet run..."
   /opt/puppetlabs/bin/puppet agent --test --environment="${PUPPET_BRANCH}" --node_name_value="${PUPPET_ROLE}";
-  3>&1 1>> "${PUPPET_LOG}"
   echo "${OK} Second puppet run complete"
   echo "Starting third puppet run..."
   /opt/puppetlabs/bin/puppet agent --test --environment="${PUPPET_BRANCH}" --node_name_value="${PUPPET_ROLE}";
@@ -176,53 +150,11 @@ function clean_up_image() {
 
 }
 
-function make_ramdisk() {
-
-  # Get the most recent kernel available
-  KERNEL=$(find "${KERNEL_PATH}" -name "${KERNEL_PATTERN}*" -printf '%f\n' | sort -nr | head -n 1 | sed "s/${KERNEL_PATTERN}//")
-  # Use user option if it is set
-  if [ ! -z "${KERNEL_SPECIFIED_VALUE}" ]; then
-    USER_KERNEL=${KERNEL_SPECIFIED_VALUE}
-    if [ ! -a "/${KERNEL_PATH}/${KERNEL}" ]; then
-      echo -e "${RED}Kernel requested ${USER_KERNEL} doesn't exist in ${KERNEL_PATH}! Using ${KERNEL}.${RESTORE}"
-    else
-      KERNEL=USER_KERNEL
-    fi
-  fi
-
-  echo -e "Installing dracut-network"
-  yum install -y dracut-network
-  echo -e "Probing overlay, squashfs, and loop..."
-  modprobe overlay squashfs loop mlx4_core mlx4_en mlx4_ib igb bnx2 i40e ipmi_si ipmi_devintf ipmi_msghandler
-  # Try and force no-hostonly
-  echo "hostonly=no" >> /etc/dracut.conf
-
-  # Build initrd
-  # Force install drivers, modules we want, and no hostonly to build generic image
-  echo -e "Making initrd..."
-  dracut -f -m 'kernel-modules anchor network base' --strip -v \
-    --no-hostonly --force-drivers \
-    "overlay squashfs loop mlx4_core mlx4_en mlx4_ib igb bnx2 i40e ipmi_si ipmi_devintf ipmi_msghandler amd_microcode" \
-    "/boot/initrd-${KERNEL}" "${KERNEL}"
-  if [ $? -ne 0 ]; then
-    echo -e "${FAILED}"
-    exit 1
-  else
-    echo - "${OK}"
-  fi
-  chmod 655 "/boot/initrd-${KERNEL}"
-
-}
-
-
 ###############################################
 
-# Distilling to just set facts, copy puppet conf and keys, run puppet, make
-# initrd
-
+# Distilling to just set facts, copy puppet conf and keys, run puppet
 collect_facts
 place_puppet_conf
 generate_ssh_keys
 chroot_puppet
 clean_up_image
-make_ramdisk
