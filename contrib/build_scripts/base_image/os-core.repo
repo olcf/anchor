@@ -1,6 +1,0 @@
-[os-core]
-name = os-core
-enabled = 1
-baseurl = https://mirror.ccs.ornl.gov/snapshots/clusters/rhel-7-x86_64-os-SNAPSHOT
-gpgcheck = 1
-gpgkey = file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release

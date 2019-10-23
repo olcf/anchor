@@ -1,0 +1,42 @@
+apiVersion: build.openshift.io/v1
+kind: BuildConfig
+metadata:
+  name: anchor-build-tools
+  labels:
+    app: anchor-build-tools
+spec:
+  output:
+    to:
+      kind: ImageStreamTag
+      name: anchor-build-tools:latest
+  runPolicy: Serial
+  source:
+    dockerfile: |
+      FROM internal-registry/example-namespace/helm-tools:latest
+
+      ARG SNAPSHOT
+      ENV SNAPSHOT=${SNAPSHOT}
+
+      RUN echo -e "[extras]\n\
+      name=extras\n\
+      baseurl=http://mirror.example.com/snapshots/clusters/rhel-7Server-x86_64-extras-${SNAPSHOT}\n\
+      gpgcheck=1\n\
+      gpgkey = file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release\n\
+      enabled=1\n" > /etc/yum.repos.d/extras.repo
+
+      RUN yum install -y buildah podman skopeo squashfs-tools
+
+  strategy:
+    type: Docker
+    dockerStrategy:
+      noCache: true
+      env:
+        - name: SNAPSHOT
+          value: '20190808'
+---
+apiVersion: image.openshift.io/v1
+kind: ImageStream
+metadata:
+  name: anchor-build-tools
+  labels:
+    app: anchor-build-tools

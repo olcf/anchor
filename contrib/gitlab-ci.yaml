@@ -1,0 +1,65 @@
+include:
+  - base_image_input.yaml
+  - initrd_build_input.yaml
+  - build_image_input.yaml
+
+stages:
+  - base image
+  - initrd build
+  - image build
+  - image squash
+
+base image build:
+  stage: base image
+  extends: .base_image_vars
+  image: registry.example.com/example-namespace/anchor-build-tools:latest
+  when: manual
+  before_script:
+    - export AUTH_FILE="./registry_auth.cfg"
+    - echo "$DOCKER_AUTH_CONFIG" > "$AUTH_FILE"
+  script:
+    - ./base_image/build.sh
+
+initrd build:
+  stage: initrd build
+  extends: .initrd_build_vars
+  image: registry.example.com/example-namespace/anchor-build-tools:latest
+  when: manual
+  artifacts:
+    paths:
+      - output/
+    expire_in: 1 week
+  before_script:
+    - export AUTH_FILE="./registry_auth.cfg"
+    - echo "$DOCKER_AUTH_CONFIG" > "$AUTH_FILE"
+  script:
+    - ./initrd_build/build.sh
+
+build image:
+  stage: image build
+  image: registry.example.com/example-namespace/anchor-build-tools:latest
+  when: manual
+  extends: .build_image_vars
+  before_script:
+    - export AUTH_FILE="./registry_auth.cfg"
+    - echo "$DOCKER_AUTH_CONFIG" > "$AUTH_FILE"
+    - export MESSAGE="${CI_COMMIT_MESSAGE}"
+    - export CI_SHORT_SHA="${CI_COMMIT_SHA:0:6}"
+    - export USER=$GITLAB_USER_NAME
+  script:
+      # Build the image
+    - build_image/build.sh
+
+squash image:
+  stage: image squash
+  image: registry.example.com/example-namespace/anchor-build-tools:latest
+  when: manual
+  extends: .build_image_vars
+  before_script:
+    - export AUTH_FILE="./registry_auth.cfg"
+    - echo "$DOCKER_AUTH_CONFIG" > "$AUTH_FILE"
+    - export MESSAGE="${CI_COMMIT_MESSAGE}"
+    - export CI_SHORT_SHA="${CI_COMMIT_SHA:0:6}"
+  script:
+      # Squash the image
+    - build_image/buildah_squash.sh

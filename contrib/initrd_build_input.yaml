@@ -1,0 +1,7 @@
+# File to set input variables to initrd_build/build.sh script
+#
+.initrd_build_vars:
+  variables:
+    BUILD_REGISTRY_URL: mtls-registry.example.com/example-namespace
+    BASE_IMAGE: anchor-base-rhel77:20191016
+    OUTPUT_DIR: output/
