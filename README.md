@@ -34,11 +34,11 @@ however they see best.
 
 | Auth | Provided By | Description |
 | --- | --- | --- |
-| `ACME` | Automatically issue certificates from a trusted CA to a node per RFC 8555 | `lib/lib_acme.sh` |
-| `SSH` | Start a dropbear server with a trusted root login key, wait until certificates put in place | `lib/lib_dropbear` |
-| `None` | Do not authenticate. Skip to the next stage | |
+| `ACME` | `lib/lib_acme.sh` | Automatically issue certificates from a trusted CA to a node per RFC 8555. |
+| `SSH` | `lib/lib_dropbear.sh` | Start a dropbear server with a trusted root login key, wait until certificates put in place. |
+| `None` | | Do not authenticate. Skip to the next stage. |
 
 | Image | Provided By | Description |
 | --- | --- | --- |
-| `squashfs` | Download squashfs image from an rsync server or mutual TLS HTTP server | `lib/lib_squashfs.sh` |
-| `buildah` | Download an uncompressed image from a docker registry. Build a squashfs live on boot. | `lib/lib_buildah` |
+| `squashfs` | `lib/lib_squashfs.sh` | Download squashfs image from an rsync server or mutual TLS HTTP server. |
+| `buildah` | `lib/lib_buildah.sh` | Download an uncompressed image from a docker registry. Build a squashfs live on boot. |
