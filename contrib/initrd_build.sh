@@ -24,6 +24,7 @@ yum install -y lego dropbear-static buildah-static squashfs-tools-static
 # Install dracut modules
 echo -e "Installing dracut modules"
 yum install -y dracut-network anchor-dracut-module
+ANCHOR_VERSION="$(rpm -q --queryformat '%{VERSION}-%{RELEASE}')"
 
 KERNEL_PATH=/boot/
 KERNEL_PATTERN='vmlinuz-'
@@ -43,7 +44,7 @@ echo -e "Making initrd..."
 dracut -f -m 'kernel-modules anchor network base' --strip -v \
   --no-hostonly --force-drivers \
   "overlay squashfs loop mlx4_core mlx4_en mlx4_ib igb bnx2 i40e ipmi_si ipmi_devintf ipmi_msghandler" \
-  "/output/initrd-${KERNEL}" "${KERNEL}"
+  "/output/initrd-${KERNEL}-anchor-${ANCHOR_VERSION:-0}" "${KERNEL}"
 
 cp "/${KERNEL_PATH}/${KERNEL_PATTERN}${KERNEL}" /output
 chmod 655 "/output/initrd-${KERNEL}"

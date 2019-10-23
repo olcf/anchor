@@ -29,3 +29,16 @@ however they see best.
 | `doc`      | Documentation pages                                             |
 | `contrib`  | Auxiliary directory containing contributions that are not part of anchor proper. This includes common CI configurations, build script examples, etc. |
 | `build.sh` | Script to build RPM.                                            |
+
+## Current modules
+
+| Auth | Provided By | Description |
+| --- | --- | --- |
+| `ACME` | Automatically issue certificates from a trusted CA to a node per RFC 8555 | `lib/lib_acme.sh` |
+| `SSH` | Start a dropbear server with a trusted root login key, wait until certificates put in place | `lib/lib_dropbear` |
+| `None` | Do not authenticate. Skip to the next stage | |
+
+| Image | Provided By | Description |
+| --- | --- | --- |
+| `squashfs` | Download squashfs image from an rsync server or mutual TLS HTTP server | `lib/lib_squashfs.sh` |
+| `buildah` | Download an uncompressed image from a docker registry. Build a squashfs live on boot. | `lib/lib_buildah` |
