@@ -42,3 +42,8 @@ however they see best.
 | --- | --- | --- |
 | `squashfs` | `lib/lib_squashfs.sh` | Download squashfs image from an rsync server or mutual TLS HTTP server. |
 | `buildah` | `lib/lib_buildah.sh` | Download an uncompressed image from a docker registry. Build a squashfs live on boot. |
+
+## Change log
+
+* 0.1.1 - First fully-featured release following the migration to a shared code
+  repository
