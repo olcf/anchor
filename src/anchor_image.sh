@@ -3,7 +3,7 @@
 # Handle image fetching
 
 # Source needed libraries
-. /lib/lib_dropbear.sh
+. /lib/lib_buildah.sh
 . /lib/lib_squashfs.sh
 . /lib/lib_overlayfs.sh
 
