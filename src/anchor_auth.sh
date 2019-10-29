@@ -7,7 +7,6 @@
 . /lib/lib_dropbear.sh
 
 anchor_auth() {
-
   # Get client certificate
   if [ ! -z "$acme_server" ] && [ ! -z "$acme_email" ]; then
     acme_get_certificate
