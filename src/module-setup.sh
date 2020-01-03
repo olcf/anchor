@@ -22,8 +22,9 @@ check() {
 }
 
 # echo all other dracut module on which this dracut modue depends
+# Install curl for HTTPS squashfs image download
 depends() {
-  echo network
+  echo network url-lib
 }
 
 # Install needed kernel modules
@@ -47,8 +48,6 @@ install() {
   inst_multiple sed tr
   # Install rsync for overlayfs creation
   inst_multiple rsync
-  # Install curl for HTTPS squashfs image download
-  inst_multiple curl /lib64/libcurl.so.4 /lib64/libssl.so.10
 
   # Install needed binaries
   for bin in $bin_list; do
