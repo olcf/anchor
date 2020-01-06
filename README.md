@@ -45,5 +45,7 @@ however they see best.
 
 ## Change log
 
+* 0.1.2 - Add `url-lib` dracut module dependency to install curl with needed
+  HTTPS libraries
 * 0.1.1 - First fully-featured release following the migration to a shared code
   repository
