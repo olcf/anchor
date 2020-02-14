@@ -20,7 +20,6 @@ export squashfs_mount_only=$(getarg squashfs_mount_only=)
 
 # Set rootok if root set to anchor and boot interface configured
 export root=$(getarg root=)
-export BOOTIF=$(getarg BOOTIF=)
-if [ "$root" == "anchor" ] && [[ ! -z "$BOOTIF" ]]; then
+if [ "$root" == "anchor" ]; then
   export rootok=1
 fi
