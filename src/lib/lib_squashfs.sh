@@ -22,6 +22,19 @@ squashfs_copy_image() {
 
   # Copy over squashfs image
   if [ "${squashfs_curl:-0}" -eq 1 ]; then
+
+    # Need randomness to curl
+    while true; do
+      read entropy_avail < /proc/sys/kernel/random/entropy_avail
+      read read_wakeup_threshold < /proc/sys/kernel/random/read_wakeup_threshold
+      # shellcheck disable=SC2086
+      if [ $entropy_avail -gt $read_wakeup_threshold ]; then
+        break
+      else
+        sleep 1
+      fi
+    done
+
     curl --cacert /ca.pem --key /client.key --cert /client.cert \
       -o "$TMP_SQUASH_RAMDISK"/image.sqsh "$squashfs_server"
   elif [ "${squashfs_rsync:-0}" -eq 1 ]; then
