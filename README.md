@@ -45,6 +45,8 @@ however they see best.
 
 ## Change log
 
+* 0.1.4 - Add `rngd` binaries and bash library to populate `/dev/random` prior
+  to ACME and curl operations
 * 0.1.3 - Remove `BOOTIF` requirement for setting `root=ok`
 * 0.1.2 - Add `url-lib` dracut module dependency to install curl with needed
   HTTPS libraries
