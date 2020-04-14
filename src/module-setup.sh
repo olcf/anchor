@@ -8,7 +8,8 @@
 # Install dropbear to receive certificate
 # Install buildah to download and mount images
 # Install mksquashfs to create new squashfs live
-bin_list="lego dropbear buildah.static mksquashfs.static"
+# Install rngd to populate /dev/random
+bin_list="lego dropbear buildah.static mksquashfs.static rngd"
 
 # Include this dracut module if the prerequisites for the module are present
 check() {
@@ -41,6 +42,7 @@ install() {
   inst "$moddir/lib/lib_buildah.sh" /lib/lib_buildah.sh
   inst "$moddir/lib/lib_overlayfs.sh" /lib/lib_overlayfs.sh
   inst "$moddir/lib/lib_dropbear.sh" /lib/lib_dropbear.sh
+  inst "$moddir/lib/lib_rngd.sh" /lib/lib_rngd.sh
   inst "$moddir/anchor_auth.sh" /lib/anchor_auth.sh
   inst "$moddir/anchor_image.sh" /lib/anchor_image.sh
 
