@@ -12,6 +12,8 @@
 #
 # Uses /ca.pem as the CA for curl, and client.{key,cert} for mutual tls
 
+. /lib/lib_rngd.sh
+
 # Copy squashfs image to dracut ramdisk
 squashfs_copy_image() {
   info "squashfs: Copying squash image to local ramdisk"
@@ -24,19 +26,10 @@ squashfs_copy_image() {
   if [ "${squashfs_curl:-0}" -eq 1 ]; then
 
     # Need randomness to curl
-    while true; do
-      read entropy_avail < /proc/sys/kernel/random/entropy_avail
-      read read_wakeup_threshold < /proc/sys/kernel/random/read_wakeup_threshold
-      # shellcheck disable=SC2086
-      if [ $entropy_avail -gt $read_wakeup_threshold ]; then
-        break
-      else
-        sleep 1
-      fi
-    done
-
+    rngd_start
     curl --cacert /ca.pem --key /client.key --cert /client.cert \
       -o "$TMP_SQUASH_RAMDISK"/image.sqsh "$squashfs_server"
+    rngd_kill
   elif [ "${squashfs_rsync:-0}" -eq 1 ]; then
     rsync -hvz --progress "$squashfs_server" "$TMP_SQUASH_RAMDISK"/image.sqsh
   else

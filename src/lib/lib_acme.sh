@@ -10,14 +10,18 @@
 # Outputs client certificate and private key to /client.cert and /client.key
 # respectively
 
+. /lib/lib_rngd.sh
+
 acme_get_certificate() {
   HOSTNAME="$(cat /proc/sys/kernel/hostname)"
 
+  rngd_start
   info "Getting certificate for ${HOSTNAME} from ${acme_server}"
   LEGO_CA_CERTIFICATES=/ca.pem lego --email "${acme_email}" \
     --accept-tos \
     --server "https://${acme_server}" --path /lego \
     --http --domains "${HOSTNAME}" run
+  rngd_kill
 
   # Move certs to / and remove /lego
   info "Certificate issued. Installing"
