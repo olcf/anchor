@@ -17,9 +17,10 @@ image overlayed with a local ramdisk.
 Honestly, a lot. Two main repositories that the clusters team rely on are our
 Anchor Operations repository to handle automation steps to build and deploy
 images, and our Chart repository to handle needed services that communicate
-with Anchor. Management of these services and operations can be done in a
-thousand different ways, and is left to each individual organization to solve
-however they see best.
+with Anchor. Copies of the public version of these two repositories are stored
+under the `contrib` folder.  Management of these services and operations can be
+done in a thousand different ways, and is left to each individual organization
+to solve however they see best.
 
 ## Repository Structure
 
