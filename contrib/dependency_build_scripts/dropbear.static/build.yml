@@ -1,0 +1,24 @@
+---
+dropbear-devel:
+  stage: Image build
+  image: openshift/origin-cli
+  tags:
+    - granite
+  script:
+    - cd dropbear.static
+    - oc create -f ./build-config.yaml || true
+    - oc start-build -F bc/dropbear-devel
+  when: manual
+
+dropbear.static:
+  stage: Package build
+  image: internal-registry/example-namespace/dropbear-devel
+  tags:
+    - granite
+  script:
+    - cd dropbear.static
+    - ./build.sh
+  artifacts:
+    paths:
+      - dropbear.static/artifacts/
+  when: manual

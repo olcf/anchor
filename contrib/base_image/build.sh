@@ -59,7 +59,7 @@ EOF
 container=$(buildah from scratch) &&
 mount_path=$(buildah mount "$container") &&
 yum -c "${OS_REPO_FILE}" --disablerepo=* --enablerepo=os-core install \
-  --installroot="$mount_path" -y @base @core &&
+  --installroot="$mount_path" -y @base @core kernel-devel &&
 yum -c "${OS_REPO_FILE}" --enablerepo=os-core --installroot="$mount_path" \
   clean all &&
 buildah commit --authfile "${AUTH_FILE}" "$container" \

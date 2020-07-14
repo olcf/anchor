@@ -3,5 +3,5 @@
 .base_image_vars:
   variables:
     BUILD_REGISTRY_URL: mtls-registry.example.com/example-namespace
-    REPO_URL: https://mirror.example.com/upstream/rhel/7/x86_64/os/
-    OUTPUT_IMAGE: anchor-base-rhel77:20191016
+    REPO_URL: https://mirror.example.com/rhel-7-x86_64-os/
+    OUTPUT_IMAGE: anchor-base-rhel77:20200123

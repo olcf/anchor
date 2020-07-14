@@ -1,0 +1,31 @@
+apiVersion: build.openshift.io/v1
+kind: BuildConfig
+metadata:
+  name: dropbear-devel
+  labels:
+    app: dropbear-devel
+spec:
+  output:
+    to:
+      kind: ImageStreamTag
+      name: dropbear-devel:latest
+  runPolicy: Serial
+  source:
+    dockerfile: |
+      FROM ubuntu:latest
+
+      # Install FPM and gcc
+      # Gem install twice due to stupid bug with childprocess gem.
+      RUN apt update
+      RUN apt install -y rpm ruby rubygems ruby-dev make gcc wget; \
+        gem install fpm;
+
+  strategy:
+    type: Docker
+    dockerStrategy:
+      noCache: true
+---
+apiVersion: image.openshift.io/v1
+kind: ImageStream
+metadata:
+  name: dropbear-devel

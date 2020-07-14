@@ -6,11 +6,15 @@
 # build the initrd. Copy the kernel and initrd to an output directory
 
 usage() {
-  echo "Usage: $0 [-r|--registry <REGISTRY_URL] [-b|--base-image <BASE_IMAGE>] [-o|--output-dir <OUTPUT_DIR>] [-a|--auth <DOCKER_AUTH_FILE>] [-h|--help]"
+  echo "Usage: $0 [-u|--repo-url <REPO_URL>] [-r|--registry <REGISTRY_URL] [-b|--base-image <BASE_IMAGE>] [-o|--output-dir <OUTPUT_DIR>] [-a|--auth <DOCKER_AUTH_FILE>] [-h|--help]"
 }
 
 while test -n "${1}"; do
   case "$1" in
+    -u|--repo-url)
+      REPO_URL=$2
+      shift 2
+      ;;
     -r|--registry)
       BUILD_REGISTRY_URL=$2
       shift 2
@@ -37,16 +41,10 @@ done
 # Run this function in a container to create an initrd
 make_initrd() {
   # Installing yum repos
-  cat > /etc/yum.repos.d/os.repo << EOF
-[os]
-name = os
-baseurl = http://mirror.example.com/upstream/rhel/7/x86_64/os/
-EOF
-
   cat > /etc/yum.repos.d/anchor.repo << EOF
 [anchor]
 name = anchor
-baseurl = http://mirror.example.com/custom/anchor/el7-x86_64
+baseurl = ${REPO_URL}
 gpgcheck = 0
 EOF
 
@@ -98,14 +96,18 @@ setup_container() {
   container=$(buildah from --authfile "${AUTH_FILE}" \
     "docker://${BUILD_REGISTRY_URL}/${BASE_IMAGE}")
 
+  # Add script to run
   buildah copy "${container}" "$0" /initrd_build.sh
+  # Pass env
+  buildah config --env REPO_URL="${REPO_URL}" "${container}"
+  # Run script
   buildah run "${container}" bash -c ". /initrd_build.sh; make_initrd"
 
   mount_path=$(buildah mount "${container}")
   cp -r "${mount_path}/output" "${OUTPUT_DIR}"
   buildah rm "${container}"
   # Try to delete base image, but there's probably other dependent containers
-  buildah rmi "${REGISTRY_URL}/${BASE_IMAGE}" || true
+  buildah rmi "${BUILD_REGISTRY_URL}/${BASE_IMAGE}" || true
 }
 
 # Run the setup_container function if this file is not being sourced.
@@ -116,7 +118,7 @@ setup_container() {
 # return and we must have been called directly
 if ! (return 0 2>/dev/null); then
 
-  if [[ -z "${BUILD_REGISTRY_URL+0}" ]] || [[ -z "${BASE_IMAGE+0}" ]] || [[ -z "${OUTPUT_DIR+0}" ]]; then
+  if [[ -z "${REPO_URL+0}" ]] || [[ -z "${BUILD_REGISTRY_URL+0}" ]] || [[ -z "${BASE_IMAGE+0}" ]] || [[ -z "${OUTPUT_DIR+0}" ]]; then
     echo "Required parameters not set"
     usage
     exit 1
