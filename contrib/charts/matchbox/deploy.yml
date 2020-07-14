@@ -1,0 +1,24 @@
+---
+Matchbox Production:
+  extends: .chart_deploy
+  image: internal-registry/example-namespace/helm-tools
+  stage: Production deploy
+  when: manual
+  tags:
+    - granite
+  variables:
+    CHART_NAME: matchbox
+    DEPLOYMENT_NAME: production
+    TILLER_NAMESPACE: examplenamespace
+
+Matchbox Dev:
+  extends: .chart_deploy
+  image: internal-registry/example-namespace/helm-tools
+  stage: Production deploy
+  when: manual
+  tags:
+    - granite
+  variables:
+    CHART_NAME: matchbox
+    DEPLOYMENT_NAME: dev
+    TILLER_NAMESPACE: examplenamespace

@@ -1,0 +1,61 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  # Call helper to expand name
+  name: {{ include "matchbox.fullname" . }}-data-groups
+  labels:
+    app.kubernetes.io/name: {{ include "matchbox.name" . }}
+    helm.sh/chart: {{ include "matchbox.chart" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+data:
+  {{/* Save variables we need */ -}}
+  {{ $groups := .Values.groups -}}
+  {{ $groupRegex := .Values.groupRegexProfile -}}
+  {{ range $_, $groupName := keys $groups -}}
+  {{/* Create a file named <key name>.json Use key in loop with top level var
+    to get contents of dict, append key id with value key name. Convert to json
+    string i.e groups[key] + { 'id': key }
+  */ -}}
+  {{ $groupName  }}.json: |
+    {{ $curGroup := index $groups $groupName -}}
+    {{/* If selector for the current group is empty, set it to hostname =
+      current key name
+    */ -}}
+    {{ $_ := set $curGroup "selector" (default (dict "hostname" $groupName) $curGroup.selector) -}}
+    {{/* Loop over available regexes */ -}}
+    {{ range $_, $regex := keys $groupRegex -}}
+      {{ $regexDict := index $groupRegex $regex -}}
+      {{/* If current regex matches, set profile if not already set */ -}}
+      {{ if regexMatch $regex $groupName -}}
+        {{ $_ := set $curGroup "profile" (default $regexDict.profile $curGroup.profile) -}}
+      {{ end -}}
+    {{ end -}}
+    {{/* Set id to group name, print out as json */ -}}
+    {{ set $curGroup "id" $groupName | toJson }}
+  {{ end }}
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  # Call helper to expand name
+  name: {{ include "matchbox.fullname" . }}-data-profiles
+  labels:
+    app.kubernetes.io/name: {{ include "matchbox.name" . }}
+    helm.sh/chart: {{ include "matchbox.chart" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+data:
+  {{/* Save profiles dict as top level variable */ -}}
+  {{ $profiles := .Values.profiles -}}
+  {{/* Iterate over keys for profile */ -}}
+  {{ range (keys $profiles ) -}}
+  {{/* Create a file named <key name>.json
+   Built new dict from key 'id' and value <key name>
+   Append to this new dict a key 'boot' and value <contents of top level
+   dict>. Convert to json string
+   i.e { 'id': key } + { 'boot': profiles[key] } */ -}}
+  {{ . }}.json: |
+    {{ set (dict "id" .) "boot" (index $profiles .) | toJson }}
+  {{ end }}

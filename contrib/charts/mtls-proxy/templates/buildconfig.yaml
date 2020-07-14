@@ -1,0 +1,43 @@
+---
+apiVersion: build.openshift.io/v1
+kind: BuildConfig
+metadata:
+  name: {{ include "mtls-proxy.fullname" . }}
+  labels:
+    app: {{ include "mtls-proxy.name" . }}
+    chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  output:
+    to:
+      kind: ImageStreamTag
+      name: {{ include "mtls-proxy.fullname" . }}:{{ .Values.haproxyVersion }}
+  runPolicy: Serial
+  source:
+    type: Docker
+    dockerfile: |
+      FROM haproxy:{{ .Values.haproxyVersion }}
+      USER {{ .Values.runAsUser }}
+  strategy:
+    type: Docker
+    dockerStrategy:
+      noCache: true
+  triggers:
+    - type: ConfigChange
+  nodeSelector: {}
+status:
+  lastVersion: 0
+---
+apiVersion: image.openshift.io/v1
+kind: ImageStream
+metadata:
+  name: {{ include "mtls-proxy.fullname" . }}
+  labels:
+    app: {{ include "mtls-proxy.name" . }}
+    chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec: {}
+status:
+  dockerImageRepository: ''

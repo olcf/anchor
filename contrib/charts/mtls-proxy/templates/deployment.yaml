@@ -1,0 +1,58 @@
+apiVersion: apps.openshift.io/v1
+kind: DeploymentConfig
+metadata:
+  name: {{ include "mtls-proxy.fullname" . }}
+  labels:
+    app.kubernetes.io/name: {{ include "mtls-proxy.name" . }}
+    helm.sh/chart: {{ include "mtls-proxy.chart" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    app.kubernetes.io/name: {{ include "mtls-proxy.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "mtls-proxy.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+      annotations:
+        # Get config map hash. Will kill pods not matching current config
+        config-checksum/{{ include "mtls-proxy.fullname" . }}: {{ include ( print .Template.BasePath "/configmap.yaml" ) . | sha256sum | trunc 8 | quote }}
+    spec:
+      containers:
+        - name: mtls-proxy
+          image: {{ include "mtls-proxy.fullname" . }}:{{ .Values.haproxyVersion }}
+          ports:
+            - name: mtls-in
+              containerPort: 8443
+              protocol: TCP
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          env:
+            {{- toYaml .Values.env | nindent 12 }}
+          volumeMounts:
+            - name: tls-certs
+              mountPath: /tls
+              readOnly: true
+            - name: config
+              mountPath: /usr/local/etc/haproxy/
+              readOnly: true
+      volumes:
+        - name: tls-certs
+          secret:
+            secretName: {{ .Values.certSecret }}
+        - name: config
+          configMap:
+            name: {{ include "mtls-proxy.fullname" . }}
+  triggers:
+    - type: ConfigChange
+    - imageChangeParams:
+        automatic: true
+        containerNames:
+          - {{ .Chart.Name }}
+        from:
+          kind: ImageStreamTag
+          name: {{ include "mtls-proxy.fullname" . }}:{{ .Values.haproxyVersion }}
+      type: ImageChange

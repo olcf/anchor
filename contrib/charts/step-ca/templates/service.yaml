@@ -1,0 +1,41 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "step-ca.fullname" . }}-node-port
+  labels:
+    app.kubernetes.io/name: {{ include "step-ca.name" . }}
+    helm.sh/chart: {{ include "step-ca.chart" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+spec:
+  type: NodePort
+  ports:
+    - port: {{ .Values.stepPort }}
+      nodePort: {{ .Values.stepPort }}
+      name: https-nodeport
+  selector:
+    app: {{ include "step-ca.name" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "step-ca.fullname" . }}
+  labels:
+    app.kubernetes.io/name: {{ include "step-ca.name" . }}
+    helm.sh/chart: {{ include "step-ca.chart" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+spec:
+  type: ClusterIP
+  ports:
+    - port: {{ .Values.stepPort }}
+      targetPort: https
+      protocol: TCP
+      name: https
+  selector:
+    app: {{ include "step-ca.name" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}

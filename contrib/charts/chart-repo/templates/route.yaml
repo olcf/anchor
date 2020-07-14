@@ -1,0 +1,23 @@
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: {{ include "chart-repo.fullname" . }}-http
+  labels:
+    app: {{ include "chart-repo.name" . }}
+    chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  host: {{ .Values.route.host }}
+  port:
+    targetPort: http
+  to:
+    kind: Service
+    name: {{ include "chart-repo.fullname" . }}
+    weight: 100
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect
+status:
+  ingress: []

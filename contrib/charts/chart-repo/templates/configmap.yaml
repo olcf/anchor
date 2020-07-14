@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  # Call helper to expand name
+  name: {{ include "chart-repo.fullname" . }}
+  labels:
+    app.kubernetes.io/name: {{ include "chart-repo.name" . }}
+    helm.sh/chart: {{ include "chart-repo.chart" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+data:
+  repowatch.conf: |
+    [gitlab]
+    username = {{ .Values.gitlabUser }}
+    hostname = {{ .Values.gitlabServer }}
+    port = 22
+    key_filename = /ssh-key/id_rsa
+  projects.yaml: |
+    - project:  {{ .Values.repowatchProject }}
+      type: gitlab
+      path: /web-dir
+      cmds:
+        - helm init --client-only
+        - ./chart-repo/package_charts.sh
+        - helm repo index .

@@ -1,0 +1,59 @@
+# Default values for mtls-proxy.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+nameOverride: ""
+fullnameOverride: ""
+
+haproxyVersion: 2.0.7
+
+# Run as automation user
+runAsUser: 1000
+
+certSecret: mtls-moderate-production
+
+replicaCount: 1
+
+externalRoute: mtls-registry.example.com
+
+haproxyCfg: |
+    global
+      maxconn 1000
+      log stdout format raw local0 debug
+    defaults
+      mode http
+      option httplog
+      timeout connect 10s
+      timeout client 30s
+      timeout server 30s
+      log global
+    frontend mtls-in
+      log global
+      bind *:8443 ssl crt /tls/cert.pem ca-file /tls/ca.pem verify required
+      mode http
+      req_ssl_sni -i anoexample.com
+      default_backend mtls-out
+    backend mtls-out
+      log global
+      mode http
+      server interal-registry internal-registry check ssl verify none
+      http-request add-header Authorization "Bearer ${BEARER_TOKEN}"
+
+env:
+  - name: BEARER_TOKEN
+    valueFrom:
+      secretKeyRef:
+        name: builder-token-xxxxx
+        key: token
+
+resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #  cpu: 100m
+  #  memory: 128Mi
+  # requests:
+  #  cpu: 100m
+  #  memory: 128Mi

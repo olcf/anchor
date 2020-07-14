@@ -1,0 +1,30 @@
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  # Call helper to expand name
+  name: {{ include "step-ca.fullname" . }}
+  labels:
+    app: {{ include "step-ca.name" . }}
+    chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+{{ with .Values.whitelistedSubdomains }}
+  annotations:
+    haproxy.router.openshift.io/ip_whitelist: {{ . }}
+{{ end -}}
+spec:
+  # Host name to route from
+  host: {{ .Values.stepURL }}
+  # To a port defined as https
+  port:
+    targetPort: https
+  # via a service with the chart name
+  to:
+    kind: Service
+    name: {{ include "step-ca.fullname" . }}
+    weight: 100
+  tls:
+    termination: passthrough
+status:
+  ingress: []

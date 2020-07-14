@@ -1,0 +1,79 @@
+---
+apiVersion: apps.openshift.io/v1
+kind: DeploymentConfig
+metadata:
+  name: {{ include "matchbox.fullname" . }}
+  labels:
+    app.kubernetes.io/name: {{ include "matchbox.name" . }}
+    helm.sh/chart: {{ include "matchbox.chart" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  strategy:
+      type: Rolling
+      rollingParams:
+        maxUnavailable: 1
+  selector:
+    app.kubernetes.io/name: {{ include "matchbox.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "matchbox.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+      annotations:
+        # Get config map hash. Will kill pods not matching current config
+        config-checksum/{{ include "matchbox.fullname" . }}: {{ include ( print .Template.BasePath "/configmap.yaml" ) . | sha256sum | trunc 8 }}
+    spec:
+      containers:
+        - name: {{ .Chart.Name }}
+          image: internal-registry/{{ .Release.Namespace }}/{{ include "matchbox.fullname" . }}:{{ .Values.matchboxVersion }}
+          env:
+            - name: MATCHBOX_ADDRESS
+              value: "0.0.0.0:8080"
+            - name: MATCHBOX_LOG_LEVEL
+              value: "debug"
+          ports:
+            - name: http
+              containerPort: 8080
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "50Mi"
+          volumeMounts:
+            - name: data-groups
+              mountPath: /var/lib/matchbox/groups
+            - name: data-profiles
+              mountPath: /var/lib/matchbox/profiles
+            - name: assets
+              mountPath: /var/lib/matchbox/assets
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 8080
+            successThreshold: 1
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+      volumes:
+        - name: data-groups
+          configMap:
+            name: {{ include "matchbox.fullname" . }}-data-groups
+        - name: data-profiles
+          configMap:
+            name: {{ include "matchbox.fullname" . }}-data-profiles
+        - name: assets
+          emptyDir: {}
+  triggers:
+    - type: ConfigChange
+    - imageChangeParams:
+        automatic: true
+        containerNames:
+          - {{ .Chart.Name }}
+        from:
+          kind: ImageStreamTag
+          name: {{ include "matchbox.fullname" . }}:{{ .Values.matchboxVersion }}
+      type: ImageChange

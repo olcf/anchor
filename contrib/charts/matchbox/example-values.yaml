@@ -1,0 +1,64 @@
+# Default values for matchbox.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+# How many pods to create. Set to >1 to ensure at least one pod is always
+# available
+replicaCount: 2
+
+# External HTTP URL to access the matchbox pods
+externalRoute: matchbox-dev.example.com
+
+# Which upstream matchbox verison to use
+matchboxVersion: v0.8.0
+
+# Which user ID to run the matchbox pod as
+# Run as automation user
+runAsUser: 1000
+
+nameOverride: ""
+fullnameOverride: ""
+
+# Resources to assign to each pod
+resources:
+  limits:
+   cpu: 50m
+   memory: 64Mi
+
+# Hash of the different profiles to be served from matchbox
+profiles:
+  image1:
+    kernel: http://example.com/vmlinuz
+    initrd:
+      - http://example.com/initrd
+      - http://example.com/ca.pem /ca.pem
+    args:
+      - arg1=1
+      - arg2=2
+
+# Regexes to assign profiles to the machine groups. Can me left empty and
+# assign profiles manually to each group in the `groups` hash.
+groupRegexProfile:
+  # Assign profile to a range of nodes
+  '^node[1-3,5]$':
+    profile: foo
+  # Assign profile to a specific node
+  '^node4$':
+    profile: bar
+  # Assign profile to 001-199, excluding 152
+  '^node[1][0-9[0-9](?<!152)$':
+    profile: jim
+  # Assign profile to all login nodes
+  '^node-login\d+$':
+    profile: image1
+
+# Hash of the machine groups to serve. The key of each group is saved as the
+# group ID and used for the selector 'hostname' by default if no other selector
+# is defined
+groups:
+  node1: {}
+  node2: {}
+  node3:
+    selector: {hostname: node3}
+    profile: image1
+  node4: {profile: node}

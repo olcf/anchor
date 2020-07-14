@@ -1,0 +1,26 @@
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  # Call helper to expand name
+  name: {{ include "mtls-proxy.fullname" . }}
+  labels:
+    app.kubernetes.io/name: {{ include "mtls-proxy.name" . }}
+    helm.sh/chart: {{ include "mtls-proxy.chart" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+spec:
+  # Host name to route from
+  host: {{ .Values.externalRoute }}
+  # To a port defined as https
+  port:
+    targetPort: mtls-in
+  # via a service with the chart name
+  to:
+    kind: Service
+    name: {{ include "mtls-proxy.fullname" . }}
+    weight: 100
+  tls:
+    termination: passthrough
+status:
+  ingress: []

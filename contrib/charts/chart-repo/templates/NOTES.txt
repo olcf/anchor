@@ -1,0 +1,1 @@
+URL: https://{{ .Values.route.host }}.{{ .Values.route.domain }}

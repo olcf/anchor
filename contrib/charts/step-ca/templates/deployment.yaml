@@ -1,0 +1,84 @@
+---
+apiVersion: apps.openshift.io/v1
+kind: DeploymentConfig
+metadata:
+  name: {{ include "step-ca.fullname" . }}
+  labels:
+    app.kubernetes.io/name: {{ include "step-ca.name" . }}
+    helm.sh/chart: {{ include "step-ca.chart" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    app: {{ include "step-ca.name" . }}
+  strategy:
+    type: Rolling
+    rollingParams:
+      maxUnavailable: 1
+  template:
+    metadata:
+      labels:
+        app: {{ include "step-ca.name" . }}
+        release: {{ .Release.Name }}
+        heritage: {{ .Release.Service }}
+    spec:
+      containers:
+        - name: {{ .Chart.Name }}
+          image: {{ .Values.registryURL }}/{{ .Release.Namespace }}/{{ include "step-ca.fullname" . }}:{{ .Values.stepCAVersion }}
+          command:  ["sh", "-c"]
+          args:
+            - |
+              mkdir /tmp/step;
+              echo "Initializing CA..";
+              step ca init --root /ca/ca.pem --key /ca/ca-key.pem \
+                --address :{{ .Values.stepPort }} \
+                --name {{ .Values.stepCAName }} \
+                --dns {{ .Values.stepURL }} \
+                --provisioner {{ .Values.provisionerEmail }} \
+                --provisioner-password-file='/provisioner-secrets/passwd' \
+                --password-file='/provisioner-secrets/passwd';
+              echo "Initializing ACME..";
+              step ca provisioner add --ca-config $(step path)/config/ca.json \
+                --password-file='/provisioner-secrets/passwd' \
+                acme --type ACME;
+              echo "Running CA Server";
+              step-ca --password-file='/provisioner-secrets/passwd' \
+                $(step path)/config/ca.json;
+          env:
+            - name: STEPPATH
+              value: /tmp/step
+          ports:
+            - name: https
+              containerPort: {{ .Values.stepPort }}
+          volumeMounts:
+            - name: provisioner-secrets
+              mountPath: /provisioner-secrets
+              readOnly: true
+            - name: ca-certs
+              mountPath: /ca
+              readOnly: true
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+{{ toYaml . | indent 8 }}
+      {{- end }}
+      restartPolicy: Always
+      volumes:
+        - name: provisioner-secrets
+          secret:
+            secretName: {{ include "step-ca.fullname" . }}-provisioner-secrets
+        - name: ca-certs
+          secret:
+            secretName: {{ .Values.caSecretName }}
+  triggers:
+    - type: ConfigChange
+    - imageChangeParams:
+        automatic: true
+        containerNames:
+          - {{ .Chart.Name }}
+        from:
+          kind: ImageStreamTag
+          name: {{ include "step-ca.fullname" . }}:{{ .Values.stepCAVersion }}
+      type: ImageChange

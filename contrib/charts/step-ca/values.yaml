@@ -1,0 +1,29 @@
+---
+# Default values for step-ca
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+registryURL: internal-registry
+
+stepURL: step-ca.example.com
+stepPort: 32756
+stepCAName: step-ca
+stepCAVersion: 0.13.3
+provisionerEmail: admin@fake.com
+caSecretName: ca-secret-name
+
+# Run as automation user
+runAsUser: 1000
+
+nameOverride: ""
+fullnameOverride: ""
+
+resources:
+  limits:
+    cpu: 250m
+    memory: 250Mi
+
+networkPolicyIngressRules:
+  - {}

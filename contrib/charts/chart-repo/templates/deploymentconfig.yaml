@@ -1,0 +1,120 @@
+---
+apiVersion: apps.openshift.io/v1
+kind: DeploymentConfig
+metadata:
+  name: {{ include "chart-repo.fullname" . }}
+  labels:
+    app: {{ include "chart-repo.name" . }}
+    helm.sh/chart: {{ include "chart-repo.chart" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    app: {{ include "chart-repo.name" . }}
+  strategy:
+    type: Rolling
+    rollingParams:
+      maxUnavailable: 1
+  template:
+    metadata:
+      labels:
+        app: {{ include "chart-repo.name" . }}
+        release: {{ .Release.Name }}
+        heritage: {{ .Release.Service }}
+      annotations:
+        # Get config map hash. Will kill pods not matching current config
+        config-checksum: {{ include ( print .Template.BasePath "/configmap.yaml" ) . | sha256sum | quote }}
+    spec:
+      containers:
+        - name: web
+          image: "{{ .Values.registryURL }}/{{ .Release.Namespace }}/{{ include "chart-repo.name" . }}-nginx:latest"
+          livenessProbe:
+            failureThreshold: 3
+            tcpSocket:
+              port: 8080
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
+          ports:
+            - containerPort: 8080
+              protocol: TCP
+          readinessProbe:
+            failureThreshold: 5
+            tcpSocket:
+              port: 8080
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
+          volumeMounts:
+            - mountPath: /web/
+              name: static-web
+              readOnly: true
+          resources:
+            {{- toYaml .Values.resources.web | nindent 12 }}
+        - name: repowatch
+          image: "{{ .Values.registryURL }}/{{ .Release.Namespace }}/{{ include "chart-repo.name" . }}-repowatch:latest"
+          env:
+            - name: HOME
+              value: /tmp/
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /
+              port: 8000
+              scheme: HTTP
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
+          ports:
+            - containerPort: 8000
+              protocol: TCP
+          readinessProbe:
+            failureThreshold: 30
+            httpGet:
+              path: /
+              port: 8000
+              scheme: HTTP
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
+          volumeMounts:
+            - mountPath: /web-dir
+              name: static-web
+            - mountPath: /ssh-key/
+              name: ssh-key
+            - mountPath: /config
+              name: repowatch-config
+          resources:
+            {{- toYaml .Values.resources.repowatch | nindent 12 }}
+      terminationGracePeriodSeconds: 5
+      volumes:
+        - name: static-web
+          persistentVolumeClaim:
+            claimName: {{ .Values.helmRepoVolumeName }}
+        - name: repowatch-config
+          configMap:
+            name: {{ include "chart-repo.fullname" . }}
+        - name: ssh-key
+          secret:
+            secretName: {{ .Values.repowatchSSHKeySecretName }}
+      securityContext:
+        runAsUser: {{ .Values.runAsUser }}
+  triggers:
+    - type: ConfigChange
+    - imageChangeParams:
+        automatic: true
+        containerNames:
+          - repowatch
+        from:
+          kind: ImageStreamTag
+          name: "{{ include "chart-repo.name" . }}-repowatch:latest"
+      type: ImageChange
+    - imageChangeParams:
+        automatic: true
+        containerNames:
+          - web
+        from:
+          kind: ImageStreamTag
+          name: "{{ include "chart-repo.name" . }}-nginx:latest"
+      type: ImageChange

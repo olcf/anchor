@@ -1,0 +1,95 @@
+---
+apiVersion: build.openshift.io/v1
+kind: BuildConfig
+metadata:
+  name: {{ include "chart-repo.fullname" . }}-nginx
+  labels:
+    app: {{ include "chart-repo.name" . }}
+    chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  output:
+    to:
+      kind: ImageStreamTag
+      name: "{{ include "chart-repo.name" . }}-nginx:latest"
+  runPolicy: Serial
+  source:
+    type: Dockerfile
+    dockerfile: |
+      FROM {{ .Values.nginx.dockerRegistry }}/{{ .Values.nginx.image }}
+      RUN echo "worker_processes 1; pid /var/run/nginx.pid;\
+        error_log /var/log/nginx/error.log warn;\
+        events {worker_connections 1024;}\
+        http { include /etc/nginx/mime.types;\
+            default_type  application/octet-stream;\
+            log_format main \'$remote_addr - $remote_user [$time_local] $request $status $body_bytes_sent $http_referer $http_user_agent $http_x_forwarded_for\';\
+            access_log /var/log/nginx/access.log main;\
+            sendfile on; keepalive_timeout 65; server { listen 8080;\
+        location / { root /web/; autoindex on;}}}" > /etc/nginx/nginx.conf
+      RUN chown -R {{ .Values.runAsUser }} /var/cache/nginx && \
+        chown -R {{ .Values.runAsUser }} /var/log/nginx && \
+        chown -R {{ .Values.runAsUser }} /etc/nginx/conf.d && \
+        touch /var/run/nginx.pid && \
+        chown -R {{ .Values.runAsUser }} /var/run/nginx.pid
+      USER {{ .Values.runAsUser }}
+  strategy:
+    type: Docker
+    dockerStrategy:
+      noCache: true
+  triggers:
+    - type: ConfigChange
+  nodeSelector: {}
+status:
+  lastVersion: 0
+---
+apiVersion: build.openshift.io/v1
+kind: BuildConfig
+metadata:
+  name: {{ include "chart-repo.fullname" . }}-repowatch
+  labels:
+    app: {{ include "chart-repo.name" . }}
+    chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  output:
+    to:
+      kind: ImageStreamTag
+      name: "{{ include "chart-repo.name" . }}-repowatch:latest"
+  runPolicy: Serial
+  source:
+    type: Dockerfile
+    dockerfile: |
+      FROM {{ .Values.repowatch.dockerRegistry }}/{{ .Values.repowatch.image }}
+
+      ARG HELM_VERSION
+      ENV HELM_VERSION=${HELM_VERSION}
+
+      RUN mkdir -p /etc/ssh/ && \
+        echo "{{ .Values.gitlabHostKey }}" >> /etc/ssh/ssh_known_hosts
+
+      RUN yum install -y git python-setuptools python-daemon python-argparse \
+        PyYAML python-paramiko && \
+        git clone https://github.com/kincl/repowatch && \
+        cd /repowatch && \
+        python setup.py install
+
+      RUN echo "Installing Helm" && \
+        curl -s "https://kubernetes-helm.storage.googleapis.com/helm-${HELM_VERSION}-linux-amd64.tar.gz" | tar zx && \
+        mv linux-amd64/helm /usr/bin/ && \
+        helm version --client
+
+      CMD /usr/bin/repowatch -C /config/repowatch.conf -P /config/projects.yaml
+  strategy:
+    type: Docker
+    dockerStrategy:
+      noCache: true
+      env:
+        - name: HELM_VERSION
+          value: {{ .Values.helmVersion }}
+  triggers:
+    - type: ConfigChange
+  nodeSelector: {}
+status:
+  lastVersion: 0

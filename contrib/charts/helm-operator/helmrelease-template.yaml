@@ -1,0 +1,17 @@
+apiVersion: helm.fluxcd.io/v1
+kind: HelmRelease
+metadata:
+  name: rabbit
+  namespace: example-namespace
+spec:
+  releaseName: rabbitmq
+  timeout: 300
+  resetValues: false
+  wait: false
+  forceUpgrade: false
+  chart:
+    repository: https://kubernetes-charts.storage.googleapis.com/
+    name: rabbitmq
+    version: 3.3.6
+  values:
+    replicas: 2

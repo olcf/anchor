@@ -1,0 +1,43 @@
+apiVersion: build.openshift.io/v1
+kind: BuildConfig
+metadata:
+  name: {{ template "helm-operator.fullname" . }}
+  labels:
+    app: {{ template "helm-operator.name" . }}
+    chart: {{ template "helm-operator.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  output:
+    to:
+      kind: ImageStreamTag
+      name: {{ include "helm-operator.fullname" . }}:{{ .Values.outputVersion }}
+  runPolicy: Serial
+  source:
+    type: Dockerfile
+    dockerfile: |
+      FROM {{ .Values.upstreamImage }}
+      RUN chown -R {{ .Values.runAsUser }} /var/fluxd/
+      USER {{ .Values.runAsUser }}
+  strategy:
+    type: Docker
+    dockerStrategy:
+      noCache: true
+  triggers:
+    - type: ConfigChange
+  nodeSelector: {}
+status:
+  lastVersion: 0
+---
+apiVersion: image.openshift.io/v1
+kind: ImageStream
+metadata:
+  name: {{ template "helm-operator.fullname" . }}
+  labels:
+    app: {{ template "helm-operator.name" . }}
+    chart: {{ template "helm-operator.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec: {}
+status:
+  dockerImageRepository: ''

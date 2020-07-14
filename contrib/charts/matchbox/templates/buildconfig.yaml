@@ -1,0 +1,44 @@
+---
+apiVersion: build.openshift.io/v1
+kind: BuildConfig
+metadata:
+  name: {{ include "matchbox.fullname" . }}
+  labels:
+    app: {{ include "matchbox.name" . }}
+    chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  output:
+    to:
+      kind: ImageStreamTag
+      name: {{ include "matchbox.fullname" . }}:{{ .Values.matchboxVersion }}
+  runPolicy: Serial
+  source:
+    type: Dockerfile
+    dockerfile: |
+      FROM quay.io/poseidon/matchbox:{{ .Values.matchboxVersion }}
+      USER {{ .Values.runAsUser }}
+      ENTRYPOINT ["/matchbox"]
+  strategy:
+    type: Docker
+    dockerStrategy:
+      noCache: true
+  triggers:
+    - type: ConfigChange
+  nodeSelector: {}
+status:
+  lastVersion: 0
+---
+apiVersion: image.openshift.io/v1
+kind: ImageStream
+metadata:
+  name: {{ include "matchbox.fullname" . }}
+  labels:
+    app: {{ include "matchbox.name" . }}
+    chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec: {}
+status:
+  dockerImageRepository: ''

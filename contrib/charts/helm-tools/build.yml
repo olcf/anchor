@@ -1,0 +1,13 @@
+---
+
+Moderate Helm tools image:
+  extends: .moderate_build_image_with_helm
+  script:
+    - oc replace -f ./helm-tools/buildconfig.yaml
+    - oc start-build -F helm-tools
+
+Open Helm tools image:
+  extends: .open_build_image_with_helm
+  script:
+    - oc replace -f ./helm-tools/buildconfig.yaml
+    - oc start-build -F helm-tools

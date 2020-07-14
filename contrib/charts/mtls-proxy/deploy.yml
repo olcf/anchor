@@ -1,0 +1,21 @@
+---
+
+mTLS Proxy Moderate Production:
+  extends: .moderate_production
+  variables:
+    CHART_NAME: mtls-proxy
+
+mTLS Proxy Moderate Staging:
+  extends: .moderate_staging
+  variables:
+    CHART_NAME: mtls-proxy
+
+mTLS Proxy Open Staging:
+  extends: .open_staging
+  variables:
+    CHART_NAME: mtls-proxy
+
+mTLS Proxy Open Production:
+  extends: .open_production
+  variables:
+    CHART_NAME: mtls-proxy

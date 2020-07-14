@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "mtls-proxy.fullname" . }}
+  labels:
+    app.kubernetes.io/name: {{ include "mtls-proxy.name" . }}
+    helm.sh/chart: {{ include "mtls-proxy.chart" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+data:
+  haproxy.cfg: {{ toYaml .Values.haproxyCfg | indent 1 }}

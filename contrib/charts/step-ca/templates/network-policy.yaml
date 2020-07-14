@@ -1,0 +1,13 @@
+---
+kind: NetworkPolicy
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: {{ include "step-ca.fullname" . }}-node-port
+spec:
+  podSelector:
+    matchLabels:
+      app: {{ include "step-ca.name" . }}
+  ingress:
+{{ toYaml .Values.networkPolicyIngressRules | indent 4 }}
+  policyTypes:
+    - Ingress

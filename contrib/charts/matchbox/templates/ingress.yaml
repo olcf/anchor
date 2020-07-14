@@ -1,0 +1,24 @@
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  # Call helper to expand name
+  name: {{ include "matchbox.fullname" . }}
+  labels:
+    app.kubernetes.io/name: {{ include "matchbox.name" . }}
+    helm.sh/chart: {{ include "matchbox.chart" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+spec:
+  # Host name to route from
+  host: {{ .Values.externalRoute }}
+  # To a port defined as http
+  port:
+    targetPort: http
+  # via a service with the chart name
+  to:
+    kind: Service
+    name: {{ include "matchbox.fullname" . }}
+    weight: 100
+status:
+  ingress: []

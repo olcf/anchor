@@ -1,0 +1,39 @@
+---
+replicaCount: 1
+
+helmVersion: v2.14.3
+
+helmRepoVolumeName: example-volume
+
+repowatch:
+  dockerRegistry: internal-registry/openshift
+  image: rhel7-base-amd64:latest
+
+nginx:
+  dockerRegistry: registry.hub.docker.com/library
+  image: nginx:1.17.9
+
+route:
+  host: anchor-charts.example.com
+  hookDomain: example.com
+
+gitlabUser: gitlab
+gitlabServer: gitlab.example.com
+
+repowatchSSHKeySecretName: repowatch-ssh-key
+
+repowatchProject: anchor/charts
+
+# gitlabHostKey:
+
+runAsUser: 1
+
+resources:
+  web:
+    limits:
+      cpu: 100m
+      memory: 100M
+  repowatch:
+    limits:
+      cpu: 100m
+      memory: 100M

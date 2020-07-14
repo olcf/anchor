@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "mtls-proxy.fullname" . }}
+  labels:
+    app.kubernetes.io/name: {{ include "mtls-proxy.name" . }}
+    helm.sh/chart: {{ include "mtls-proxy.chart" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8443
+      targetPort: mtls-in
+      protocol: TCP
+      name: mtls-in
+  selector:
+    app.kubernetes.io/name: {{ include "mtls-proxy.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}

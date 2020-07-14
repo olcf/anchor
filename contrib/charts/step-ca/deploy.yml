@@ -1,0 +1,11 @@
+---
+
+Step-CA Moderate Production:
+  extends: .moderate_production
+  variables:
+    CHART_NAME: step-ca
+
+Step-CA Moderate Staging:
+  extends: .moderate_staging
+  variables:
+    CHART_NAME: step-ca

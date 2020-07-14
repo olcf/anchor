@@ -1,0 +1,40 @@
+apiVersion: build.openshift.io/v1
+kind: BuildConfig
+metadata:
+  name: helm-tools
+  labels:
+    app: helm-tools
+spec:
+  output:
+    to:
+      kind: ImageStreamTag
+      name: helm-tools:latest
+  runPolicy: Serial
+  source:
+    dockerfile: |
+      FROM internal-registry/openshift/rhel7-base-x86:latest
+
+      ARG HELM_VERSION
+      ENV HELM_VERSION=${HELM_VERSION}
+
+      RUN yum install -y origin-clients
+
+      RUN echo "Installing Helm" && \
+      curl -s "https://kubernetes-helm.storage.googleapis.com/helm-${HELM_VERSION}-linux-amd64.tar.gz" | tar zx && \
+      mv linux-amd64/helm /usr/bin/ && \
+      helm version --client
+
+  strategy:
+    type: Docker
+    dockerStrategy:
+      noCache: true
+      env:
+        - name: HELM_VERSION
+          value: 'v2.12.3'
+---
+apiVersion: image.openshift.io/v1
+kind: ImageStream
+metadata:
+  name: helm-tools
+  labels:
+    app: helm-tools
