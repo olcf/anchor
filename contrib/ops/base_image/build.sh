@@ -63,6 +63,6 @@ yum -c "${OS_REPO_FILE}" --disablerepo=* --enablerepo=os-core install \
 yum -c "${OS_REPO_FILE}" --enablerepo=os-core --installroot="$mount_path" \
   clean all &&
 buildah commit --authfile "${AUTH_FILE}" "$container" \
-  "docker://${BUILD_REGISTRY_URL}/${OUTPUT_IMAGE}" &&
+  "${BUILD_REGISTRY_URL}${OUTPUT_IMAGE}" &&
 rm -f "${OS_REPO_FILE}" &&
 buildah rm "$container"

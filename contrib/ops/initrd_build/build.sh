@@ -94,7 +94,7 @@ EOF
 # make_initrd
 setup_container() {
   container=$(buildah from --authfile "${AUTH_FILE}" \
-    "docker://${BUILD_REGISTRY_URL}/${BASE_IMAGE}")
+    "${BUILD_REGISTRY_URL}${BASE_IMAGE}")
 
   # Add script to run
   buildah copy "${container}" "$0" /initrd_build.sh
@@ -107,7 +107,7 @@ setup_container() {
   cp -r "${mount_path}/output" "${OUTPUT_DIR}"
   buildah rm "${container}"
   # Try to delete base image, but there's probably other dependent containers
-  buildah rmi "${BUILD_REGISTRY_URL}/${BASE_IMAGE}" || true
+  buildah rmi "${BUILD_REGISTRY_URL}${BASE_IMAGE}" || true
 }
 
 # Run the setup_container function if this file is not being sourced.

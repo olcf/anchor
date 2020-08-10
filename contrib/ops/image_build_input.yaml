@@ -3,11 +3,11 @@
 
 .build_image_vars:
   variables:
-    PUPPET_BRANCH: production
+    PUPPET_BRANCH: master
     BASE_IMAGE: anchor-base-rhel81:20200622
-    CERTIFICATE_NAME: andes_rtr_test
-    PUPPET_ROLE: andes_ipoib_rtr
-    IMAGE_SUFFIX: jce_20200709
-    BUILD_REGISTRY_URL: mtls-registry.example.com/example-namespace
-    PUPPET_URL: http://mirror.example.com//el/7/x86_64/puppet/
+    CERTIFICATE_NAME: cluster_cert
+    PUPPET_ROLE: cluster_login
+    IMAGE_SUFFIX: production_20200807
+    BUILD_REGISTRY_URL: docker://mtls-registry.example.com/example-namespace/
+    PUPPET_URL: http://mirror.example.com/el/7/x86_64/puppet/
     PUPPET_SERVER: puppet.example.com

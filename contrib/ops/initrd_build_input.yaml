@@ -1,8 +1,9 @@
+---
 # File to set input variables to initrd_build/build.sh script
 #
 .initrd_build_vars:
   variables:
-    BUILD_REGISTRY_URL: mtls-registry.example.com/example-namespace
-    REPO_URL: http://mirror.example.com/custom/anchor/el7-x86_64
+    BUILD_REGISTRY_URL: docker://mtls-registry.example.com/example-namespace/
+    REPO_URL: http://mirror.example.com/el/7/x86_64/anchor
     BASE_IMAGE: anchor-base-rhel77:20200123
     OUTPUT_DIR: output/

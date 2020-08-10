@@ -2,6 +2,10 @@
 #
 # Build a new image only using buildah. Save everything to granite registry.
 #
+# Self sourcing bash file. Create a build container from the configured base
+# image, copy this file into the container. source this file and run the
+# build functions defined.
+#
 # Outputs images in the following format
 # ${PUPPET_ROLE}:${IMAGE_SUFFIX}-${CI_SHORT_SHA}-${PUPPET_COMMIT_SHA}
 # ${PUPPET_ROLE}:${IMAGE_SUFFIX}
@@ -62,7 +66,7 @@ PUPPET_LOG="first-puppet-run.log"
 # Create container, copy keys, run build script
 setup_container() {
   container=$(buildah from --authfile "${AUTH_FILE}" \
-    "${BUILD_REGISTRY_URL}/${BASE_IMAGE}") &&
+    "${BUILD_REGISTRY_URL}${BASE_IMAGE}") &&
 
   # Add puppet keys
   buildah copy "${container}" \
@@ -82,10 +86,11 @@ setup_container() {
   buildah config --env PUPPET_SERVER="${PUPPET_SERVER}" "${container}" &&
   buildah config --env CERTIFICATE_NAME="${CERTIFICATE_NAME}" "${container}" &&
 
-  # Install this script and run build
+  # Install this script, run build, delete backing script
   buildah copy "${container}" "$0" /build_image.sh &&
   buildah run "${container}" bash -c ". /build_image.sh; build_image"
   build_image_status=$?
+  buildah run "${container}" bash -c "rm /build_image.sh"
   if [[ "$build_image_status" != 0 ]]; then return $build_image_status; fi
 }
 
@@ -161,6 +166,39 @@ function run_puppet() {
   yum clean all
 }
 
+# Buildah mounts temporay files over /etc/resolv.conf and /etc/hosts during the
+# containers' run step. These files can be modified, but not saved. Until this
+# behavior changes, to get our changes into the image we need to overwrite
+# these files with the file system mounted.
+#
+# Check if we have overwrites in the container image. If so, overwrite
+function network_overwrites() {
+  if [[ -f "${container_mount}/etc/resolv.conf.anchor" ]]; then
+    echo "Overwriting /etc/resolv.conf"
+    mv "${container_mount}/etc/resolv.conf.anchor" "${container_mount}/etc/resolv.conf"
+  else
+    # Copy resolv.conf into the image
+    cat <<-EOF > ${container_mount}/etc/resolv.conf
+# search list for host-name lookup
+search example.com
+
+# dns.example.com
+nameserver 1.1.1.1
+
+# dns1.example.com
+nameserver 8.8.8.8
+
+# dns2.example.com
+nameserver 8.8.4.4
+EOF
+  fi
+
+  if [[ -f "${container_mount}/etc/hosts.anchor" ]]; then
+    echo "Overwriting /etc/hosts"
+    mv "${container_mount}/etc/hosts.anchor" "${container_mount}/etc/hosts"
+  fi
+}
+
 # Set first boot and add some systemd cleanup
 function clean_up_image() {
   if [ -e "/usr/lib/systemd/system/ebtables.service" ]; then
@@ -203,20 +241,8 @@ finalize_container() {
     "Info: Applying configuration version \'\K\w+(?=')" \
     "${container_mount}/${PUPPET_LOG}") &&
 
-  # Copy resolv.conf into the image
-  cat <<-EOF > ${container_mount}/etc/resolv.conf
-# search list for host-name lookup
-search example.com
-
-# dns.example.com
-nameserver 1.1.1.1
-
-# dns1.example.com
-nameserver 8.8.8.8
-
-# dns2.example.com
-nameserver 8.8.4.4
-EOF
+  # Overwrite network files mounted in container, if they exist
+  network_overwrites
 
   # Store image info in file
   cat <<-EOF > "${container_mount}/${PUPPET_ROLE}:${IMAGE_SUFFIX}-${CI_SHORT_SHA:-000000}-${PUPPET_COMMIT_SHA:-000000}" &&
@@ -244,9 +270,9 @@ EOF
 
   # Push new image and short name
   buildah commit --authfile "${AUTH_FILE}" "${container}" \
-    "docker://${BUILD_REGISTRY_URL}/${PUPPET_ROLE}:${IMAGE_SUFFIX}-${CI_SHORT_SHA:-000000}-${PUPPET_COMMIT_SHA:-000000}"
+    "${BUILD_REGISTRY_URL}${PUPPET_ROLE}:${IMAGE_SUFFIX}-${CI_SHORT_SHA:-000000}-${PUPPET_COMMIT_SHA:-000000}"
   buildah commit --authfile "${AUTH_FILE}" "${container}" \
-    "docker://${BUILD_REGISTRY_URL}/${PUPPET_ROLE}:${IMAGE_SUFFIX}"
+    "${BUILD_REGISTRY_URL}${PUPPET_ROLE}:${IMAGE_SUFFIX}"
 }
 
 # Cleanup container
@@ -255,7 +281,7 @@ clean_container() {
 
   # Try to delete base image, but could fail because the build host has other
   # images that are dependent on it
-  buildah rmi "${BUILD_REGISTRY_URL}/${BASE_IMAGE}" || true
+  buildah rmi "${BUILD_REGISTRY_URL}${BASE_IMAGE}" || true
 }
 
 main() {
@@ -309,7 +335,8 @@ main() {
   clean_container
 }
 
-# Run main if this file is not being sourced.
+# Run main if we're not in the build container
+# (i.e. if this file is not being sourced)
 #
 # Bash only allows return functions in sourced scripts. Run a dummy return
 # command in a subshell and ignore stderr. If exit code is 0, we're able to
