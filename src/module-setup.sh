@@ -44,13 +44,12 @@ install() {
   inst "$moddir/lib/lib_overlayfs.sh" /lib/lib_overlayfs.sh
   inst "$moddir/lib/lib_dropbear.sh" /lib/lib_dropbear.sh
   inst "$moddir/lib/lib_rngd.sh" /lib/lib_rngd.sh
-  # lib_nfs already exists from dracut nfs module
-  inst "$moddir/lib/lib_anchor_nfs.sh" /lib/lib_anchor_nfs.sh
+  inst "$moddir/lib/lib_nfs.sh" /lib/lib_nfs.sh
   inst "$moddir/anchor_auth.sh" /lib/anchor_auth.sh
   inst "$moddir/anchor_image.sh" /lib/anchor_image.sh
 
   # Install unix tools for dracut module
-  inst_multiple sed tr
+  inst_multiple sed tr cut
   # Install rsync for overlayfs creation
   inst_multiple rsync
 

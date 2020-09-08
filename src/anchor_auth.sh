@@ -5,6 +5,7 @@
 # Source needed libraries
 . /lib/lib_acme.sh
 . /lib/lib_dropbear.sh
+. /lib/lib_nfs.sh
 
 anchor_auth() {
   # Get client certificate
@@ -12,6 +13,8 @@ anchor_auth() {
     acme_get_certificate
   elif [ ! -z "$dropbear_auth_key" ]; then
     dropbear_get_certificate
+  elif [ ! -z "$nfs_mount" ] && [ ! -z "$nfs_files" ]; then
+    nfs_mount_copy
   fi
 
 }

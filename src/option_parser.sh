@@ -7,6 +7,9 @@ export acme_email=$(getarg acme_email=)
 
 export dropbear_auth_key=$(getarg dropbear_auth_key=)
 
+export nfs_mount=$(getarg nfs_mount=)
+export nfs_files=$(getarg nfs_files=)
+
 export buildah_registry=$(getarg buildah_registry=)
 export buildah_image=$(getarg buildah_image=)
 
@@ -17,9 +20,6 @@ export squashfs_curl=$(getarg squashfs_curl=)
 export squashfs_rsync=$(getarg squashfs_rsync=)
 export squashfs_server=$(getarg squashfs_server=)
 export squashfs_mount_only=$(getarg squashfs_mount_only=)
-
-export nfs_mount=$(getarg nfs_mount=)
-export nfs_image_path=$(getarg nfs_image_path=)
 
 # Set rootok if root set to anchor and boot interface configured
 export root=$(getarg root=)
