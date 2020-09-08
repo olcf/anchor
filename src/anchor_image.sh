@@ -6,6 +6,7 @@
 . /lib/lib_buildah.sh
 . /lib/lib_squashfs.sh
 . /lib/lib_overlayfs.sh
+. /lib/lib_nfs.sh
 
 anchor_image() {
   # Download image flat from container registry, create squashfs, mount
@@ -20,11 +21,14 @@ anchor_image() {
   elif [ ! -z "$squashfs_server" ]; then
     squashfs_copy_image
     squashfs_mount
+  # Mount NFS share, copy compressed squashfs image, mount
+  elif [ ! -z "$squashfs_server" ]; then
+    nfs_copy_image
+    squashfs_mount
   # Mount already in place squashfs
   elif [ ! -z "$squashfs_mount_only" ]; then
     squashfs_mount
   fi
-
   # Create overlayfs over squashfs
   if [ ! -z "$overlayfs_write" ] && [ ! -z "$overlayfs_size" ]; then
     overlayfs_create
