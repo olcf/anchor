@@ -36,7 +36,8 @@ to solve however they see best.
 | Auth | Provided By | Description |
 | --- | --- | --- |
 | `ACME` | `lib/lib_acme.sh` | Automatically issue certificates from a trusted CA to a node per RFC 8555. |
-| `SSH` | `lib/lib_dropbear.sh` | Start a dropbear server with a trusted root login key, wait until certificates put in place. |
+| `SSH` | `lib/lib_dropbear.sh` | Start a dropbear server with a trusted root login key, wait until files put in place. Optionally send client network data to a URL. |
+| `NFS` | `lib/lib_nfs.sh` | Mount an NFS share to retrieve the files needed for authentication. |
 | `None` | | Do not authenticate. Skip to the next stage. |
 
 | Image | Provided By | Description |
@@ -46,6 +47,7 @@ to solve however they see best.
 
 ## Change log
 
+* 0.1.5 - Add NFS authentication module, add URL polling to dropbear
 * 0.1.4 - Add `rngd` binaries and bash library to populate `/dev/random` prior
   to ACME and curl operations
 * 0.1.3 - Remove `BOOTIF` requirement for setting `root=ok`
